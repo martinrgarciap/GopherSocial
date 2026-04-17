@@ -10,14 +10,28 @@ import (
 )
 
 type userKey string
+
 const userCtx userKey = "user"
 
-
+// GetUser godoc
+//
+//	@Summary		Fetches a user profile
+//	@Description	Fetches a user profile by ID
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	store.User
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id} [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := getUserFromContext(r)
 
-	if err := app.jsonResponse(w,http.StatusOK, user); err != nil {
-		app.internalServerResponse(w,r,err)
+	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
+		app.internalServerResponse(w, r, err)
 	}
 }
 
@@ -25,13 +39,26 @@ type FollowUser struct {
 	UserID int64 `json:"user_id"`
 }
 
+// FollowUser godoc
+//
+//	@Summary		Follows a user
+//	@Description	Follows a user by ID
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path		int		true	"User ID"
+//	@Success		204		{string}	string	"User followed"
+//	@Failure		400		{object}	error	"User payload missing"
+//	@Failure		404		{object}	error	"User not found"
+//	@Security		ApiKeyAuth
+//	@Router			/users/{userID}/follow [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 	followerUser := getUserFromContext(r)
 
 	// TODO: Revert back to auth userId from ctx
 	var payload FollowUser
-	if err := readJSON(w,r, &payload); err != nil {
-		app.badRequestResponse(w,r,err)
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
@@ -40,39 +67,52 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	if err := app.store.Follower.Follow(ctx, followerUser.ID, payload.UserID); err != nil {
 		switch err {
 		case store.ErrConflict:
-			app.conflictResponse(w,r,err)
+			app.conflictResponse(w, r, err)
 			return
 		default:
-			app.internalServerResponse(w,r,err)
+			app.internalServerResponse(w, r, err)
 			return
-		}	
+		}
 	}
 
-	if err := app.jsonResponse(w,http.StatusNoContent, nil); err != nil {
-		app.internalServerResponse(w,r,err)
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerResponse(w, r, err)
 	}
-	
+
 }
 
+// UnfollowUser gdoc
+//
+//	@Summary		Unfollow a user
+//	@Description	Unfollow a user by ID
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path		int		true	"User ID"
+//	@Success		204		{string}	string	"User unfollowed"
+//	@Failure		400		{object}	error	"User payload missing"
+//	@Failure		404		{object}	error	"User not found"
+//	@Security		ApiKeyAuth
+//	@Router			/users/{userID}/unfollow [put]
 func (app *application) unFollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	unFollowedUser := getUserFromContext(r)
 
 	// TODO: Revert back to auth userId from ctx
 	var payload FollowUser
-	if err := readJSON(w,r, &payload); err != nil {
-		app.badRequestResponse(w,r,err)
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
 	ctx := r.Context()
 
 	if err := app.store.Follower.UnFollow(ctx, unFollowedUser.ID, payload.UserID); err != nil {
-		app.internalServerResponse(w,r,err)
+		app.internalServerResponse(w, r, err)
 		return
 	}
 
-	if err := app.jsonResponse(w,http.StatusNoContent, nil); err != nil {
-		app.internalServerResponse(w,r,err)
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerResponse(w, r, err)
 	}
 }
 

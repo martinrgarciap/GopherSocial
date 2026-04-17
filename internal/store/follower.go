@@ -7,11 +7,10 @@ import (
 	"github.com/lib/pq"
 )
 
-
 type Follower struct {
-	UserID int64 `json:"user_id"`
-	FollowerID int64 `json:"follower_id"`
-	CreatedAt string `json:"created_at"`
+	UserID     int64  `json:"user_id"`
+	FollowerID int64  `json:"follower_id"`
+	CreatedAt  string `json:"created_at"`
 }
 
 type FollowerStore struct {
@@ -34,7 +33,6 @@ func (s *FollowerStore) Follow(ctx context.Context, followerID, userID int64) er
 	}
 	return nil
 }
-		
 
 func (s *FollowerStore) UnFollow(ctx context.Context, followerID, userID int64) error {
 	query := `
@@ -44,7 +42,7 @@ func (s *FollowerStore) UnFollow(ctx context.Context, followerID, userID int64) 
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
-	
+
 	_, err := s.db.ExecContext(ctx, query, userID, followerID)
 	return err
 }
