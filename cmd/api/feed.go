@@ -25,7 +25,6 @@ import (
 //	@Failure		500		{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/users/feed [get]
-
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
 	fq := store.PaginatedFeedQuery{
 		Limit:  20,
