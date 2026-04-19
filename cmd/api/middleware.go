@@ -45,7 +45,7 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 
 		ctx := r.Context()
 
-		user, err := app.store.Users.GetByID(ctx, userID)
+		user, err := app.getUser(ctx, userID)
 		if err != nil {
 			app.unauthorizedErrorResponse(w, r, err)
 			return
@@ -128,4 +128,40 @@ func (app *application) checkRolePrecedence(ctx context.Context, user *store.Use
 		return false, err
 	}
 	return user.Role.Level >= role.Level, nil
+}
+
+func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
+	var user *store.User
+
+	if app.config.redisCfg.enabled {
+		// app.logger.Infow("cache lookup", "key", "user", "id", userID)
+		cachedUser, err := app.cacheStorage.Users.Get(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		user = cachedUser
+	}
+
+	if user == nil {
+		// app.logger.Infow("fetching from DB", "id", userID)
+		dbUser, err := app.store.Users.GetByID(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		user = dbUser
+
+		if app.config.redisCfg.enabled && user != nil {
+			if err := app.cacheStorage.Users.Set(ctx, user); err != nil {
+				app.logger.Warnw(
+					"failed to set user cache",
+					"user_id", userID,
+					"error", err.Error(),
+				)
+			}
+		}
+	}
+
+	return user, nil
 }
