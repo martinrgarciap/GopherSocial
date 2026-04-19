@@ -102,6 +102,19 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// DeletePost godoc
+//
+//	@Summary		Deletes a post
+//	@Description	Delete a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"Post ID"
+//	@Success		204	{object}	string
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{id} [delete]
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "postID")
 
@@ -145,7 +158,7 @@ type UpdatePostPayload struct {
 //	@Failure		404		{object}	error
 //	@Failure		500		{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/posts/{id} [put]
+//	@Router			/posts/{id} [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	post := getPostFromCtx(r)
 

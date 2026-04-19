@@ -77,7 +77,13 @@ var comments = []string{
 func Seed(store store.Storage, db *sql.DB) {
 	ctx := context.Background()
 
-	users := generateUsers(100)
+	role, err := store.Roles.GetByName(ctx, "user")
+	if err != nil {
+		log.Println("Error fetching role:", err)
+		return
+	}
+
+	users := generateUsers(100, role.ID)
 	tx, _ := db.BeginTx(ctx, nil)
 
 	for _, user := range users {
@@ -108,7 +114,7 @@ func Seed(store store.Storage, db *sql.DB) {
 	log.Println("Seeding complete")
 }
 
-func generateUsers(num int) []*store.User {
+func generateUsers(num int, roleID int64) []*store.User {
 	users := make([]*store.User, num)
 
 	for i := 0; i < num; i++ {
