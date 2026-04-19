@@ -137,10 +137,14 @@ func (app *application) getUser(ctx context.Context, userID int64) (*store.User,
 		// app.logger.Infow("cache lookup", "key", "user", "id", userID)
 		cachedUser, err := app.cacheStorage.Users.Get(ctx, userID)
 		if err != nil {
-			return nil, err
+			app.logger.Warnw(
+				"failed to get user from cache",
+				"user_id", userID,
+				"error", err.Error(),
+			)
+		} else {
+			user = cachedUser
 		}
-
-		user = cachedUser
 	}
 
 	if user == nil {

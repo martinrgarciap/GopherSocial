@@ -142,7 +142,7 @@ func (s *UserStore) CreateAndInvite(ctx context.Context, user *User, token strin
 		}
 
 		// create the user invite
-		if err := s.createUserInvitation(ctx, tx, token, invitationExp, user.ID); err == nil {
+		if err := s.createUserInvitation(ctx, tx, token, invitationExp, user.ID); err != nil {
 			return err
 		}
 
@@ -251,7 +251,7 @@ func (s *UserStore) Delete(ctx context.Context, userID int64) error {
 }
 
 func (s *UserStore) delete(ctx context.Context, tx *sql.Tx, id int64) error {
-	query := `UPDATE FROM users WHERE id = $1`
+	query := `DELETE FROM users WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()

@@ -24,7 +24,7 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 	if limit != "" {
 		l, err := strconv.Atoi(limit)
 		if err != nil {
-			return fq, nil
+			return fq, err
 		}
 
 		fq.Limit = l
@@ -34,7 +34,7 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 	if offset != "" {
 		o, err := strconv.Atoi(offset)
 		if err != nil {
-			return fq, nil
+			return fq, err
 		}
 
 		fq.Offset = o
@@ -61,8 +61,8 @@ func (fq PaginatedFeedQuery) Parse(r *http.Request) (PaginatedFeedQuery, error) 
 	}
 
 	until := qs.Get("until")
-	if since != "" {
-		fq.Since = parseTime(until)
+	if until != "" {
+		fq.Until = parseTime(until)
 	}
 
 	return fq, nil
