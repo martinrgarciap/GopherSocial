@@ -8,6 +8,7 @@ import (
 	"github.com/martinrgarciap/gophersocial/internal/db"
 	"github.com/martinrgarciap/gophersocial/internal/env"
 	"github.com/martinrgarciap/gophersocial/internal/mailer"
+	"github.com/martinrgarciap/gophersocial/internal/ratelimiter"
 	"github.com/martinrgarciap/gophersocial/internal/store"
 	"github.com/martinrgarciap/gophersocial/internal/store/cache"
 	"go.uber.org/zap"
@@ -68,6 +69,11 @@ func main() {
 				issuer: "gophersocial",
 			},
 		},
+		ratelimiter: ratelimiter.Config{
+			RequestsPerTimeFrame: env.GetInt("RATELIMITER_REQUESTS_COUNT", 20),
+			TimeFrame:            time.Second * 5,
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
+		},
 	}
 
 	// Logger
@@ -99,7 +105,15 @@ func main() {
 			cfg.redisCfg.db,
 		)
 		logger.Info("redis connection established")
+
+		defer rdb.Close()
 	}
+
+	// Rate Limiter
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.ratelimiter.RequestsPerTimeFrame,
+		cfg.ratelimiter.TimeFrame,
+	)
 
 	store := store.NewStorage(db)
 	cacheStorage := cache.NewRedisStorage(rdb)
@@ -119,6 +133,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		rateLimiter:   rateLimiter,
 	}
 
 	mux := app.mount()

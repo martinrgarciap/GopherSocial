@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/martinrgarciap/gophersocial/internal/auth"
+	"github.com/martinrgarciap/gophersocial/internal/ratelimiter"
 	"github.com/martinrgarciap/gophersocial/internal/store"
 	"github.com/martinrgarciap/gophersocial/internal/store/cache"
 	"go.uber.org/zap"
@@ -22,12 +23,19 @@ func newTestApplication(t *testing.T, cfg config) *application {
 
 	testAuth := &auth.TestAuthenticator{}
 
+	// Rate limiter
+	rateLimiter := ratelimiter.NewFixedWindowLimiter(
+		cfg.ratelimiter.RequestsPerTimeFrame,
+		cfg.ratelimiter.TimeFrame,
+	)
+
 	return &application{
 		logger:        logger,
 		store:         mockStore,
 		cacheStorage:  mockCacheStore,
 		authenticator: testAuth,
 		config:        cfg,
+		rateLimiter:   rateLimiter,
 	}
 }
 
