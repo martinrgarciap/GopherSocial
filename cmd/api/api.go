@@ -32,7 +32,7 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
-	rateLimiter   ratelimiter.Limiter
+	rateLimiter   ratelimiter.FixedWindowLimiter
 }
 
 type config struct {

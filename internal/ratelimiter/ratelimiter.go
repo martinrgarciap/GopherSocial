@@ -1,9 +1,19 @@
 package ratelimiter
 
-import "time"
+import (
+	"context"
+	"time"
 
-type Limiter interface {
-	Allow(ip string) (bool, time.Duration)
+	"github.com/go-redis/redis/v8"
+)
+
+type FixedWindowLimiter interface {
+	FixedWindowAllow(ip string) (bool, time.Duration)
+	FixedWindowCachedAllow(ctx context.Context, rdb *redis.Client, ip string) (bool, time.Duration, error)
+}
+
+type TokenBucketLimiter interface {
+	TokenBucketAllow(ip string) (bool, time.Duration)
 }
 
 type Config struct {
