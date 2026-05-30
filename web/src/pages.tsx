@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import type { FormEvent, KeyboardEvent, MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { API_URL } from "./App";
 
@@ -69,7 +69,9 @@ const commentsKey = (token: string) =>
 
 const loadLocalPosts = (token: string) => {
   try {
-    return JSON.parse(localStorage.getItem(localPostsKey(token)) || "[]") as FeedPost[];
+    return JSON.parse(
+      localStorage.getItem(localPostsKey(token)) || "[]",
+    ) as FeedPost[];
   } catch {
     return [];
   }
@@ -81,19 +83,26 @@ const saveLocalPosts = (token: string, posts: FeedPost[]) => {
 
 const loadFeedCache = (token: string) => {
   try {
-    return JSON.parse(localStorage.getItem(feedCacheKey(token)) || "[]") as FeedPost[];
+    return JSON.parse(
+      localStorage.getItem(feedCacheKey(token)) || "[]",
+    ) as FeedPost[];
   } catch {
     return [];
   }
 };
 
 const saveFeedCache = (token: string, posts: FeedPost[]) => {
-  localStorage.setItem(feedCacheKey(token), JSON.stringify(posts.slice(0, 200)));
+  localStorage.setItem(
+    feedCacheKey(token),
+    JSON.stringify(posts.slice(0, 200)),
+  );
 };
 
 const loadFollowing = (token: string) => {
   try {
-    return JSON.parse(localStorage.getItem(followingKey(token)) || "[]") as number[];
+    return JSON.parse(
+      localStorage.getItem(followingKey(token)) || "[]",
+    ) as number[];
   } catch {
     return [];
   }
@@ -105,7 +114,11 @@ const saveFollowing = (token: string, userIDs: number[]) => {
 
 const loadLikedPosts = (token: string) => {
   try {
-    return (JSON.parse(localStorage.getItem(likedPostsKey(token)) || "[]") as Array<number | string>).map(String);
+    return (
+      JSON.parse(localStorage.getItem(likedPostsKey(token)) || "[]") as Array<
+        number | string
+      >
+    ).map(String);
   } catch {
     return [];
   }
@@ -117,7 +130,9 @@ const saveLikedPosts = (token: string, itemIDs: string[]) => {
 
 const loadLikeCounts = (token: string) => {
   try {
-    return JSON.parse(localStorage.getItem(likeCountsKey(token)) || "{}") as Record<string, number>;
+    return JSON.parse(
+      localStorage.getItem(likeCountsKey(token)) || "{}",
+    ) as Record<string, number>;
   } catch {
     return {};
   }
@@ -129,7 +144,9 @@ const saveLikeCounts = (token: string, counts: Record<string, number>) => {
 
 const loadLocalComments = (token: string) => {
   try {
-    return JSON.parse(localStorage.getItem(commentsKey(token)) || "{}") as Record<string, PostComment[]>;
+    return JSON.parse(
+      localStorage.getItem(commentsKey(token)) || "{}",
+    ) as Record<string, PostComment[]>;
   } catch {
     return {};
   }
@@ -178,7 +195,9 @@ const avatarColors = [
 ];
 
 const avatarStyle = (seed: string) => {
-  const total = seed.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const total = seed
+    .split("")
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
   const first = avatarColors[total % avatarColors.length];
   const second = avatarColors[(total + 3) % avatarColors.length];
 
@@ -268,11 +287,11 @@ type LikeButtonProps = {
 
 const LikeButton = ({ itemID, compact = false }: LikeButtonProps) => {
   const token = getToken();
-  const [likedPosts, setLikedPosts] = useState<string[]>(
-    () => (token ? loadLikedPosts(token) : []),
+  const [likedPosts, setLikedPosts] = useState<string[]>(() =>
+    token ? loadLikedPosts(token) : [],
   );
-  const [likeCounts, setLikeCounts] = useState<Record<string, number>>(
-    () => (token ? loadLikeCounts(token) : {}),
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>(() =>
+    token ? loadLikeCounts(token) : {},
   );
   const isLiked = likedPosts.includes(itemID);
   const count = likeCounts[itemID] || 0;
@@ -648,7 +667,10 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
       const body = (await response.json()) as ApiResponse<FeedPost[] | null>;
       const nextPosts = body.data || [];
       setPosts(nextPosts);
-      saveFeedCache(currentToken, mergePosts(nextPosts, loadFeedCache(currentToken)));
+      saveFeedCache(
+        currentToken,
+        mergePosts(nextPosts, loadFeedCache(currentToken)),
+      );
     } catch {
       setStatus("Could not reach the API. Is the backend running?");
     } finally {
@@ -843,13 +865,18 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
               placeholder="Filter by tag"
             />
           </label>
-          <select
-            value={sort}
-            onChange={(event) => setSort(event.target.value as "desc" | "asc")}
-          >
-            <option value="desc">Newest</option>
-            <option value="asc">Oldest</option>
-          </select>
+          <label>
+            Sort
+            <select
+              value={sort}
+              onChange={(event) =>
+                setSort(event.target.value as "desc" | "asc")
+              }
+            >
+              <option value="desc">Newest</option>
+              <option value="asc">Oldest</option>
+            </select>
+          </label>
           {normalizedTags.length > 0 && (
             <div className="selected-tags">
               {normalizedTags.map((tag) => (
@@ -915,7 +942,9 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
                     </div>
                     {canFollow && (
                       <button
-                        className={isFollowing ? "follow-button active" : "follow-button"}
+                        className={
+                          isFollowing ? "follow-button active" : "follow-button"
+                        }
                         type="button"
                         onClick={() => toggleFollow(post.user_id)}
                       >
@@ -946,7 +975,6 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
                   <div className="post-actions">
                     <span>{post.comments_count || 0} comments</span>
                     <LikeButton compact itemID={`post-${post.id}`} />
-                    <Link to={`/posts/${post.id}`}>View</Link>
                     {post.user_id === currentUserID && (
                       <>
                         <Link to={`/posts/${post.id}/edit`}>Edit</Link>
@@ -957,10 +985,14 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
                               removePostFromLocalCaches(token, post.id);
                             }
                             setPosts((currentPosts) =>
-                              currentPosts.filter((item) => item.id !== post.id),
+                              currentPosts.filter(
+                                (item) => item.id !== post.id,
+                              ),
                             );
                             setLocalPosts((currentPosts) =>
-                              currentPosts.filter((item) => item.id !== post.id),
+                              currentPosts.filter(
+                                (item) => item.id !== post.id,
+                              ),
                             );
                           }}
                         />
@@ -1287,7 +1319,11 @@ export const UserProfilePage = () => {
           <h1>{username}</h1>
           <p>@{username}</p>
         </div>
-        <button className="ghost-button" type="button" onClick={() => navigate(-1)}>
+        <button
+          className="ghost-button"
+          type="button"
+          onClick={() => navigate(-1)}
+        >
           Back
         </button>
       </header>
@@ -1323,7 +1359,9 @@ export const UserProfilePage = () => {
             <div className="post-body">
               <div className="post-meta">
                 <strong>{username}</strong>
-                {post.created_at && <span>{formatPostDate(post.created_at)}</span>}
+                {post.created_at && (
+                  <span>{formatPostDate(post.created_at)}</span>
+                )}
               </div>
               <h2>
                 <Link to={`/posts/${post.id}`}>{post.title}</Link>
@@ -1446,7 +1484,11 @@ export const PostDetailPage = () => {
           <h1>Post</h1>
           <p>{status || "Post details"}</p>
         </div>
-        <button className="ghost-button" type="button" onClick={() => navigate(-1)}>
+        <button
+          className="ghost-button"
+          type="button"
+          onClick={() => navigate(-1)}
+        >
           Back
         </button>
       </header>
