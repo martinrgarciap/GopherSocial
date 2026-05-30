@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { API_URL } from "./App";
 
 export const ConfirmationPage = () => {
@@ -19,9 +19,13 @@ export const ConfirmationPage = () => {
   };
 
   return (
-    <div>
+    <section className="content-panel">
       <h1>Confirmation</h1>
+      <p>Confirm this account activation token.</p>
       <button onClick={handleConfirm}>Click to confirm</button>
-    </div>
+      <Link className="secondary-link" to="/">
+        Back home
+      </Link>
+    </section>
   );
 };
