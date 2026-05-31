@@ -1,6 +1,6 @@
 module github.com/martinrgarciap/gophersocial
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/go-chi/cors v1.2.2
