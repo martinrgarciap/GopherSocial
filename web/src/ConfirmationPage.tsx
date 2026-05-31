@@ -14,14 +14,14 @@ export const ConfirmationPage = () => {
       redirect("/");
     } else {
       // handle error
-      alert("Failed to confirm token");
+      alert("We could not confirm this account.");
     }
   };
 
   return (
     <section className="content-panel">
-      <h1>Confirmation</h1>
-      <p>Confirm this account activation token.</p>
+      <h1>Confirm your account</h1>
+      <p>Finish setting up your profile to start using GopherSocial.</p>
       <button onClick={handleConfirm}>Click to confirm</button>
       <Link className="secondary-link" to="/">
         Back home

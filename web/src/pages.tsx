@@ -74,8 +74,8 @@ const guestPosts: FeedPost[] = [
     user_id: -1,
     title: "Welcome to GopherSocial",
     content:
-      "You are browsing as Guest. Log in to load the live community feed and unlock likes, comments, follows, and posting.",
-    tags: ["Guest", "Home"],
+      "A place to share quick updates, follow people, and jump into conversations as they happen.",
+    tags: ["Welcome", "Community"],
     comments_count: 0,
     created_at: new Date().toISOString(),
     user: {
@@ -456,7 +456,7 @@ export const RegisterPage = () => {
       setSession(loginBody.data, username);
       navigate("/");
     } catch {
-      setStatus("Could not reach the API. Is the backend running?");
+      setStatus("We could not create your account right now.");
     } finally {
       setIsLoading(false);
     }
@@ -468,8 +468,8 @@ export const RegisterPage = () => {
         <p className="eyebrow">Join GopherSocial</p>
         <h1>Create your account.</h1>
         <p>
-          New accounts are confirmed and signed in automatically, so you can
-          start using the app right away.
+          Choose a username, find people to follow, and start sharing what is
+          on your mind.
         </p>
       </div>
 
@@ -544,7 +544,7 @@ export const LoginPage = () => {
       setSession(body.data, currentUsername);
       navigate("/");
     } catch {
-      setStatus("Could not reach the API. Is the backend running?");
+      setStatus("We could not log you in right now.");
     } finally {
       setIsLoading(false);
     }
@@ -556,8 +556,8 @@ export const LoginPage = () => {
         <p className="eyebrow">Welcome back</p>
         <h1>Log in to your timeline.</h1>
         <p>
-          Sign in with an activated account to fetch your personalized feed and
-          post updates.
+          Pick up where you left off, catch up on new posts, and join the
+          conversation.
         </p>
       </div>
 
@@ -631,7 +631,7 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
       setPosts(tab === "all" ? guestPosts : []);
       setStatus(
         tab === "all"
-          ? "Browsing as Guest. Log in to load live posts and interact."
+          ? "Sign in to see more posts and join the conversation."
           : "",
       );
       return;
@@ -684,7 +684,7 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
         mergePosts(nextPosts, loadFeedCache(currentToken)),
       );
     } catch {
-      setStatus("Could not reach the API. Is the backend running?");
+      setStatus("We could not load the timeline right now.");
     } finally {
       setIsLoading(false);
     }
@@ -776,7 +776,7 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
         loadFeed(activeTab, offset);
       }
     } catch {
-      setStatus("Could not update follow status. Is the backend running?");
+      setStatus("We could not update that follow right now.");
     }
   };
 
@@ -784,11 +784,8 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
     return (
       <section className="locked-view">
         <div className="lock-mark">GS</div>
-        <h1>Log in to view your feed.</h1>
-        <p>
-          The feed endpoint is protected by JWT auth, so you need a token before
-          this page can load posts.
-        </p>
+        <h1>Log in to see your following feed.</h1>
+        <p>Follow people and keep up with the posts you care about most.</p>
         <div className="action-row">
           <Link className="primary-link" to="/login">
             Log in
@@ -850,7 +847,7 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
             <h1>{activeTab === "all" ? "Home" : "Following"}</h1>
             <p>
               {!token
-                ? "Guest view. Sign in to load and interact with the live feed."
+                ? "Explore the community, then sign in to post, reply, like, and follow."
                 : activeTab === "all"
                 ? "Latest posts from the community."
                 : "Posts from users you follow."}
@@ -1146,7 +1143,7 @@ export const CreatePostPage = () => {
       saveFeedCache(token, mergePosts([newPost], loadFeedCache(token)));
       navigate("/");
     } catch {
-      setStatus("Could not reach the API. Is the backend running?");
+      setStatus("We could not publish your post right now.");
     } finally {
       setIsLoading(false);
     }
@@ -1250,7 +1247,7 @@ const DeletePostButton = ({ postID, onDeleted }: DeletePostButtonProps) => {
         alert(await apiMessage(response));
       }
     } catch {
-      alert("Could not delete post. Is the backend running?");
+      alert("We could not delete this post right now.");
     } finally {
       setIsDeleting(false);
     }
