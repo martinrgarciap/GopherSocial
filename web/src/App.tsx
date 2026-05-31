@@ -5,14 +5,21 @@ import { NavLink, Outlet } from "react-router-dom";
 export const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8080/v1";
 
+const TOKEN_KEY = "gophersocial_token";
+const USERNAME_KEY = "gophersocial_username";
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
-    () => Boolean(localStorage.getItem("gophersocial_token")),
+    () => Boolean(localStorage.getItem(TOKEN_KEY)),
+  );
+  const [username, setUsername] = useState(
+    () => localStorage.getItem(USERNAME_KEY) || "",
   );
 
   useEffect(() => {
     const syncAuth = () => {
-      setIsLoggedIn(Boolean(localStorage.getItem("gophersocial_token")));
+      setIsLoggedIn(Boolean(localStorage.getItem(TOKEN_KEY)));
+      setUsername(localStorage.getItem(USERNAME_KEY) || "");
     };
 
     window.addEventListener("storage", syncAuth);
@@ -25,7 +32,8 @@ function App() {
   }, []);
 
   const logout = () => {
-    localStorage.removeItem("gophersocial_token");
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USERNAME_KEY);
     window.dispatchEvent(new Event("auth-changed"));
   };
 
@@ -35,6 +43,10 @@ function App() {
         <NavLink to="/" className="brand">
           GopherSocial
         </NavLink>
+
+        <div className="session-label">
+          {isLoggedIn ? `Welcome ${username || "back"}` : "Guest"}
+        </div>
 
         <nav className="nav-links" aria-label="Main navigation">
           <NavLink to="/">Home</NavLink>

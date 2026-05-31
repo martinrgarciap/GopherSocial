@@ -45,6 +45,7 @@ type UserProfile = {
 type FeedTab = "all" | "following";
 
 const TOKEN_KEY = "gophersocial_token";
+const USERNAME_KEY = "gophersocial_username";
 const FEED_PAGE_SIZE = 20;
 
 const getToken = () => localStorage.getItem(TOKEN_KEY);
@@ -66,6 +67,22 @@ const likeCountsKey = (token: string) =>
 
 const commentsKey = (token: string) =>
   `gophersocial_comments_${token.slice(-16)}`;
+
+const guestPosts: FeedPost[] = [
+  {
+    id: -1,
+    user_id: -1,
+    title: "Welcome to GopherSocial",
+    content:
+      "You are browsing as Guest. Log in to load the live community feed and unlock likes, comments, follows, and posting.",
+    tags: ["Guest", "Home"],
+    comments_count: 0,
+    created_at: new Date().toISOString(),
+    user: {
+      username: "gophersocial",
+    },
+  },
+];
 
 const loadLocalPosts = (token: string) => {
   try {
@@ -333,9 +350,39 @@ const LikeButton = ({ itemID, compact = false }: LikeButtonProps) => {
   );
 };
 
-const setToken = (token: string) => {
+const setSession = (token: string, username?: string) => {
   localStorage.setItem(TOKEN_KEY, token);
+
+  if (username) {
+    localStorage.setItem(USERNAME_KEY, username);
+  }
+
   window.dispatchEvent(new Event("auth-changed"));
+};
+
+const loadCurrentUsername = async (token: string) => {
+  const userID = getCurrentUserID(token);
+
+  if (!userID) {
+    return "";
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/users/${userID}/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return "";
+    }
+
+    const body = (await response.json()) as ApiResponse<UserProfile>;
+    return body.data.username;
+  } catch {
+    return "";
+  }
 };
 
 const apiMessage = async (response: Response) => {
@@ -348,84 +395,20 @@ const apiMessage = async (response: Response) => {
 };
 
 export const HomePage = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => Boolean(getToken()));
-
-  useEffect(() => {
-    const syncAuth = () => {
-      setIsLoggedIn(Boolean(getToken()));
-    };
-
-    window.addEventListener("storage", syncAuth);
-    window.addEventListener("auth-changed", syncAuth);
-
-    return () => {
-      window.removeEventListener("storage", syncAuth);
-      window.removeEventListener("auth-changed", syncAuth);
-    };
-  }, []);
-
-  if (isLoggedIn) {
-    return <FeedPage />;
-  }
-
-  return (
-    <section className="home-view">
-      <div className="home-hero">
-        <p className="eyebrow">Social network API client</p>
-        <h1>See what your Go backend can do.</h1>
-        <p className="intro">
-          Register, sign in, create posts, and view your authenticated feed from
-          a cleaner social-style interface.
-        </p>
-
-        <div className="action-row">
-          <Link className="primary-link" to="/register">
-            Create account
-          </Link>
-          <Link className="secondary-link" to="/feed">
-            View feed
-          </Link>
-        </div>
-      </div>
-
-      <div className="preview-stack" aria-hidden="true">
-        <article className="post-card raised">
-          <div className="avatar">G</div>
-          <div>
-            <div className="post-meta">
-              <strong>gopherdev</strong>
-              <span>@gopherdev</span>
-            </div>
-            <p>Just shipped JWT auth, follows, and a PostgreSQL feed query.</p>
-          </div>
-        </article>
-        <article className="post-card">
-          <div className="avatar">A</div>
-          <div>
-            <div className="post-meta">
-              <strong>api_builder</strong>
-              <span>@api</span>
-            </div>
-            <p>Rate limiters are easier to reason about with mock time.</p>
-          </div>
-        </article>
-      </div>
-    </section>
-  );
+  return <FeedPage />;
 };
 
 export const RegisterPage = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [activationToken, setActivationToken] = useState("");
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (event: FormEvent) => {
     event.preventDefault();
     setStatus("");
-    setActivationToken("");
     setIsLoading(true);
 
     try {
@@ -443,8 +426,35 @@ export const RegisterPage = () => {
       }
 
       const body = (await response.json()) as ApiResponse<{ token: string }>;
-      setActivationToken(body.data.token);
-      setStatus("Account created. Confirm it before logging in.");
+
+      const activationResponse = await fetch(
+        `${API_URL}/users/activate/${body.data.token}`,
+        {
+          method: "PUT",
+        },
+      );
+
+      if (!activationResponse.ok) {
+        setStatus(await apiMessage(activationResponse));
+        return;
+      }
+
+      const loginResponse = await fetch(`${API_URL}/authentication/token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!loginResponse.ok) {
+        setStatus(await apiMessage(loginResponse));
+        return;
+      }
+
+      const loginBody = (await loginResponse.json()) as ApiResponse<string>;
+      setSession(loginBody.data, username);
+      navigate("/");
     } catch {
       setStatus("Could not reach the API. Is the backend running?");
     } finally {
@@ -458,8 +468,8 @@ export const RegisterPage = () => {
         <p className="eyebrow">Join GopherSocial</p>
         <h1>Create your account.</h1>
         <p>
-          The backend returns an activation token after registration. Use it to
-          confirm the account, then log in.
+          New accounts are confirmed and signed in automatically, so you can
+          start using the app right away.
         </p>
       </div>
 
@@ -498,11 +508,6 @@ export const RegisterPage = () => {
         </button>
 
         {status && <p className="form-status">{status}</p>}
-        {activationToken && (
-          <Link className="token-link" to={`/confirm/${activationToken}`}>
-            Confirm account
-          </Link>
-        )}
       </form>
     </section>
   );
@@ -535,8 +540,9 @@ export const LoginPage = () => {
       }
 
       const body = (await response.json()) as ApiResponse<string>;
-      setToken(body.data);
-      navigate("/feed");
+      const currentUsername = await loadCurrentUsername(body.data);
+      setSession(body.data, currentUsername);
+      navigate("/");
     } catch {
       setStatus("Could not reach the API. Is the backend running?");
     } finally {
@@ -622,6 +628,12 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
     if (!currentToken) {
       setLocalPosts([]);
       setFollowingIDs([]);
+      setPosts(tab === "all" ? guestPosts : []);
+      setStatus(
+        tab === "all"
+          ? "Browsing as Guest. Log in to load live posts and interact."
+          : "",
+      );
       return;
     }
 
@@ -768,7 +780,7 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
     }
   };
 
-  if (!token) {
+  if (!token && activeTab !== "all") {
     return (
       <section className="locked-view">
         <div className="lock-mark">GS</div>
@@ -819,14 +831,16 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
     activeTab === "all"
       ? "No posts are available yet."
       : "Follow users to fill this timeline.";
-  const suggestedUsers = visiblePosts
-    .filter((post) => post.user_id !== currentUserID)
-    .filter((post) => !followingIDs.includes(post.user_id))
-    .filter(
-      (post, index, list) =>
-        list.findIndex((item) => item.user_id === post.user_id) === index,
-    )
-    .slice(0, 5);
+  const suggestedUsers = token
+    ? visiblePosts
+        .filter((post) => post.user_id !== currentUserID)
+        .filter((post) => !followingIDs.includes(post.user_id))
+        .filter(
+          (post, index, list) =>
+            list.findIndex((item) => item.user_id === post.user_id) === index,
+        )
+        .slice(0, 5)
+    : [];
 
   return (
     <section className="feed-view">
@@ -835,7 +849,9 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
           <div>
             <h1>{activeTab === "all" ? "Home" : "Following"}</h1>
             <p>
-              {activeTab === "all"
+              {!token
+                ? "Guest view. Sign in to load and interact with the live feed."
+                : activeTab === "all"
                 ? "Latest posts from the community."
                 : "Posts from users you follow."}
             </p>
@@ -907,7 +923,7 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
 
           {visiblePosts.map((post) => {
             const username = post.user?.username || "gopher";
-            const canFollow = post.user_id !== currentUserID;
+            const canFollow = Boolean(token) && post.user_id !== currentUserID;
             const isFollowing = followingIDs.includes(post.user_id);
 
             return (
@@ -974,8 +990,12 @@ export const FeedPage = ({ initialTab = "all" }: FeedPageProps) => {
                   )}
                   <div className="post-actions">
                     <span>{post.comments_count || 0} comments</span>
-                    <LikeButton compact itemID={`post-${post.id}`} />
-                    {post.user_id === currentUserID && (
+                    {token ? (
+                      <LikeButton compact itemID={`post-${post.id}`} />
+                    ) : (
+                      <Link to="/login">Log in to interact</Link>
+                    )}
+                    {token && post.user_id === currentUserID && (
                       <>
                         <Link to={`/posts/${post.id}/edit`}>Edit</Link>
                         <DeletePostButton

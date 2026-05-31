@@ -26,6 +26,13 @@
   text-decoration: none;
 }
 
+.session-label {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .nav-links {
   display: grid;
   gap: 8px;
