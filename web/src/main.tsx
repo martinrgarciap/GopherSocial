@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.tsx";
 import { ConfirmationPage } from "./ConfirmationPage.tsx";
+import LandingPage from "./LandingPage.tsx";
 import {
   CreatePostPage,
   EditPostPage,
@@ -19,10 +20,13 @@ import "./index.css";
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <LandingPage />,
+  },
+  {
     element: <App />,
     children: [
       {
-        index: true,
+        path: "app",
         element: <HomePage />,
       },
       {

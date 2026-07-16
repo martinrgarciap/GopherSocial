@@ -11,7 +11,7 @@ export const ConfirmationPage = () => {
     });
 
     if (response.ok) {
-      redirect("/");
+      redirect("/app");
     } else {
       // handle error
       alert("We could not confirm this account.");
@@ -23,8 +23,8 @@ export const ConfirmationPage = () => {
       <h1>Confirm your account</h1>
       <p>Finish setting up your profile to start using GopherSocial.</p>
       <button onClick={handleConfirm}>Click to confirm</button>
-      <Link className="secondary-link" to="/">
-        Back home
+      <Link className="secondary-link" to="/app">
+        Back to GopherSocial
       </Link>
     </section>
   );

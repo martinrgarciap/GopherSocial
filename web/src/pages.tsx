@@ -454,7 +454,7 @@ export const RegisterPage = () => {
 
       const loginBody = (await loginResponse.json()) as ApiResponse<string>;
       setSession(loginBody.data, username);
-      navigate("/");
+      navigate("/app");
     } catch {
       setStatus("We could not create your account right now.");
     } finally {
@@ -542,7 +542,7 @@ export const LoginPage = () => {
       const body = (await response.json()) as ApiResponse<string>;
       const currentUsername = await loadCurrentUsername(body.data);
       setSession(body.data, currentUsername);
-      navigate("/");
+      navigate("/app");
     } catch {
       setStatus("We could not log you in right now.");
     } finally {
@@ -1141,7 +1141,7 @@ export const CreatePostPage = () => {
 
       saveLocalPosts(token, [newPost, ...existingPosts].slice(0, 20));
       saveFeedCache(token, mergePosts([newPost], loadFeedCache(token)));
-      navigate("/");
+    navigate("/app");
     } catch {
       setStatus("We could not publish your post right now.");
     } finally {
@@ -1541,7 +1541,7 @@ export const PostDetailPage = () => {
               <Link to={`/posts/${post.id}/edit`}>Edit</Link>
               <DeletePostButton
                 postID={post.id}
-                onDeleted={() => navigate("/")}
+                onDeleted={() => navigate("/app")}
               />
             </div>
           )}
